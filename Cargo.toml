@@ -1,0 +1,18 @@
+[package]
+name = "hx711"
+version = "0.1.0"
+authors = ["DaneSlattery <dane_s@umantec.net>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+hal = { package = "esp32-hal", version = "0.15.0" }
+esp-backtrace = { version = "0.8.0", features = [
+    "esp32",
+    "panic-handler",
+    "exception-handler",
+    "print-uart",
+] }
+esp-println = { version = "0.6.0", features = ["esp32", "log"] }
+log = { version = "0.4.18" }
+critical-section = "*"
