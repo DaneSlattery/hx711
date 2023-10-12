@@ -13,7 +13,7 @@ use esp_backtrace as _;
 use esp_println::println;
 use hal::{
     clock::ClockControl,
-    gpio::IO,
+    gpio::{Floating, Gpio16, Gpio4, Input, Output, PushPull, IO},
     interrupt,
     peripherals::{self, Peripherals},
     prelude::*,
@@ -21,8 +21,11 @@ use hal::{
 };
 
 mod hx711;
+type SckPin = Gpio4<Output<PushPull>>;
+type DTPin = Gpio16<Input<Floating>>;
 
-static HX711_MUTEX: Mutex<RefCell<Option<hx711::HX711<4, 16>>>> = Mutex::new(RefCell::new(None));
+static HX711_MUTEX: Mutex<RefCell<Option<hx711::HX711<SckPin, DTPin>>>> =
+    Mutex::new(RefCell::new(None));
 
 #[entry]
 fn main() -> ! {

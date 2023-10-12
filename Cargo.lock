@@ -267,17 +267,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
-name = "hx711"
-version = "0.1.0"
-dependencies = [
- "critical-section",
- "esp-backtrace",
- "esp-println",
- "esp32-hal",
- "log",
-]
-
-[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -291,6 +280,18 @@ checksum = "d5477fe2230a79769d8dc68e0eabf5437907c0457a5614a9e8dddb67f65eb65d"
 dependencies = [
  "equivalent",
  "hashbrown",
+]
+
+[[package]]
+name = "loadcell"
+version = "0.1.0"
+dependencies = [
+ "critical-section",
+ "embedded-hal",
+ "esp-backtrace",
+ "esp-println",
+ "esp32-hal",
+ "log",
 ]
 
 [[package]]

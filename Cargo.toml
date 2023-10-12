@@ -1,12 +1,24 @@
 [package]
-name = "hx711"
+name = "loadcell"
 version = "0.1.0"
 authors = ["DaneSlattery <dane_s@umantec.net>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-hal = { package = "esp32-hal", version = "0.15.0" }
+embedded-hal = { version = "*", features = ["unproven"] }
+esp32-hal = { version = "*", optional = true }
+
+[features]
+default = []
+esp32_interrupt = ["esp32-hal"]
+
+
+[[example]]
+name = "interrupt"
+required-features = ["esp32_interrupt"]
+
+[dev-dependencies]
 esp-backtrace = { version = "0.8.0", features = [
     "esp32",
     "panic-handler",

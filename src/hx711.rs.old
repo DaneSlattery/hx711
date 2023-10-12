@@ -2,24 +2,15 @@
 /// This implements the hx711 using `embedded-hal` traits
 ///
 ///
-// use core::convert::Infallible;
-#[cfg(feature = "default")]
-use core::fmt;
-
+use core::convert::Infallible;
 use core::mem::transmute;
-
-#[cfg(feature = "esp32_interrupt")]
-pub mod interrupt;
-#[cfg(feature = "esp32_interrupt")]
-pub use interrupt::*;
 
 use embedded_hal::blocking::delay::DelayUs;
 
 use embedded_hal::digital::v2::{InputPin, OutputPin};
 
-#[cfg(feature = "default")]
 use crate::LoadCell;
-// pub mod hx711_interrupt;
+
 #[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum GainMode {
@@ -32,6 +23,11 @@ pub const HX711_MINIMUM: i32 = -(2i32.saturating_pow(24 - 1));
 pub const HX711_MAXIMUM: i32 = 2i32.saturating_pow(24 - 1) - 1;
 const HX711_DELAY_TIME_US: u32 = 1;
 
+// pub enum UseMode {
+//     INTERRUPT,
+//     SYNC,
+// }
+
 pub struct HX711<SckPin, DTPin, Delay>
 where
     SckPin: OutputPin,
@@ -43,27 +39,20 @@ where
     delay: Delay,
     last_reading: i32,
     gain_mode: GainMode,
-    offset: i32,        // tare
+    offset: i32, // tare
     scale: Option<f32>, // calibration value,
+                 // use_mode: UseMode,
 }
 
-// trait _HX711 {
-//     type SckPin;
-//     type DTPin;
-//     type Delay;
-//     pub fn new(mut sck_pin: SckPin) -> Self;
-// }
-#[cfg(feature = "default")]
-impl<SckPin, DTPin, Delay, ESCK, EDT> HX711<SckPin, DTPin, Delay>
+impl<SckPin, DTPin, Delay> HX711<SckPin, DTPin, Delay>
 where
-    SckPin: OutputPin<Error = ESCK>,
-    DTPin: InputPin<Error = EDT>,
+    SckPin: OutputPin<Error = Infallible>,
+    DTPin: InputPin<Error = Infallible>,
     Delay: DelayUs<u32>,
-    EDT: fmt::Debug,
-    ESCK: fmt::Debug,
 {
-    pub fn new(mut sck_pin: SckPin, dt_pin: DTPin, delay: Delay) -> Self {
+    pub fn new(mut sck_pin: SckPin, mut dt_pin: DTPin, delay: Delay) -> Self {
         sck_pin.set_low().unwrap();
+        // dt_pin.listen(Event::FallingEdge);
         Self {
             sck_pin,
             dt_pin,
@@ -72,9 +61,10 @@ where
             gain_mode: GainMode::A64,
             offset: 0,
             scale: Some(0.0),
+            // use_mode: UseMode::INTERRUPT,
         }
     }
-    pub fn is_ready(&self) -> bool {
+    fn is_ready(&self) -> bool {
         self.dt_pin.is_low().unwrap()
     }
 
@@ -109,22 +99,50 @@ where
     pub fn get_gain_mode(&self) -> GainMode {
         self.gain_mode
     }
+    //    pub fn activate_interrupt(&mut self) {
+    //         // self.sck_pin.set_low().unwrap();
+    //         self.use_mode = UseMode::INTERRUPT;
+    //         // if let UseMode::INTERRUPT = self.use_mode {
+    //         // } else {
+    //         //     panic!("Hx711 Peripheral not in interrupt mode.")
+    //         // }
+    //         // self.dt_pin.
+    //         if self.dt_pin.is_listening() {
+    //             self.dt_pin.unlisten();
+    //         }
+    //         self.dt_pin.listen(Event::FallingEdge);
+    //     }
+
+    // /// listen for interrupt events
+    // pub fn deactivate_interrupt(&mut self) {
+    //     // self.sck_pin.set_low().unwrap();
+    //     if let UseMode::INTERRUPT = self.use_mode {
+    //     } else {
+    //         panic!("Hx711 Peripheral not in interrupt mode.")
+    //     }
+    //     if self.dt_pin.is_listening() {
+    //         self.dt_pin.unlisten();
+    //     }
+    //     self.use_mode = UseMode::SYNC;
+    //     // self.dt_pin.listen(Event::FallingEdge);
+    // }
 }
 
-#[cfg(feature = "default")]
-impl<SckPin, DTPin, Delay, ESCK, EDT> LoadCell for HX711<SckPin, DTPin, Delay>
+impl<SckPin, DTPin, Delay> LoadCell for HX711<SckPin, DTPin, Delay>
 where
-    SckPin: OutputPin<Error = ESCK>,
-    DTPin: InputPin<Error = EDT>,
+    SckPin: OutputPin<Error = Infallible>,
+    DTPin: InputPin<Error = Infallible>,
     Delay: DelayUs<u32>,
-    ESCK: fmt::Debug,
-    EDT: fmt::Debug,
 {
     type Offset = u32;
     type Scale = Option<f32>;
 
     fn read(&mut self) -> i32 {
         if !self.is_ready() {
+            // if let UseMode::INTERRUPT = self.use_mode {
+            //     self.dt_pin.clear_interrupt();
+            // }
+
             return HX711_MINIMUM;
         }
 
@@ -158,6 +176,10 @@ where
         }
         self.last_reading = signed;
 
+        // if let UseMode::INTERRUPT = self.use_mode {
+        //     self.dt_pin.clear_interrupt();
+        // }
+        // return
         signed
     }
 
@@ -172,6 +194,11 @@ where
     fn read_scaled(&mut self) -> Option<f32> {
         let raw = self.read();
         self.scale.map(|x| raw as f32 * x)
+        // match self.scale {
+        //     Some(x) => Some(raw as f32 * x),
+        //     _ => None,
+        // }
+        // raw as f32 * self.scale?
     }
 
     fn set_scale(&mut self, scale: Self::Scale) {
@@ -179,17 +206,22 @@ where
     }
 
     fn tare(&mut self, num_samples: usize) {
+        // self.deactivate_interrupt();
         let mut current;
         let mut average: f32 = 0.0;
         for n in 1..=num_samples {
             while !self.is_ready() {
                 self.delay.delay_us(5000u32);
+                // self.delay.delay_ms(5u32);
             }
             current = self.read() as f32;
+            // println!("Current = {current} average = {average}");
             self.delay.delay_us(10u32 * 1000);
             average += (current - average) / (n as f32);
         }
 
         self.offset = average as i32;
+
+        // self.activate_interrupt();
     }
 }
