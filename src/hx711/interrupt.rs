@@ -1,7 +1,7 @@
 // #[doc = r"
 // ESP32 Specific implementation for use with interrupts
 // "]
-use crate::hx711::{transmute, GainMode, HX711, HX711_DELAY_TIME_US, HX711_MAXIMUM, HX711_MINIMUM};
+use crate::hx711::HX711;
 use crate::LoadCell;
 
 use core::convert::Infallible;

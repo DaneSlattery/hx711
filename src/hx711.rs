@@ -32,6 +32,9 @@ pub const HX711_MINIMUM: i32 = -(2i32.saturating_pow(24 - 1));
 pub const HX711_MAXIMUM: i32 = 2i32.saturating_pow(24 - 1) - 1;
 const HX711_DELAY_TIME_US: u32 = 1;
 
+const HX711_TARE_DELAY_TIME_US: u32 = 5000;
+const HX711_TARE_SLEEP_TIME_US: u32 = 10000;
+
 pub struct HX711<SckPin, DTPin, Delay>
 where
     SckPin: OutputPin,
@@ -43,16 +46,10 @@ where
     delay: Delay,
     last_reading: i32,
     gain_mode: GainMode,
-    offset: i32,        // tare
-    scale: Option<f32>, // calibration value,
+    offset: i32, // tare
+    scale: f32,  // calibration value,
 }
 
-// trait _HX711 {
-//     type SckPin;
-//     type DTPin;
-//     type Delay;
-//     pub fn new(mut sck_pin: SckPin) -> Self;
-// }
 #[cfg(feature = "default")]
 impl<SckPin, DTPin, Delay, ESCK, EDT> HX711<SckPin, DTPin, Delay>
 where
@@ -71,7 +68,7 @@ where
             last_reading: 0,
             gain_mode: GainMode::A64,
             offset: 0,
-            scale: Some(0.0),
+            scale: 1.0,
         }
     }
     pub fn is_ready(&self) -> bool {
@@ -95,7 +92,7 @@ where
         pin_state
     }
 
-    pub fn toggle_sck_bit(&mut self, hx711_delay_time_us: u32) {
+    fn toggle_sck_bit(&mut self, hx711_delay_time_us: u32) {
         self.sck_pin.set_high().unwrap();
         self.delay.delay_us(hx711_delay_time_us);
         self.sck_pin.set_low().unwrap();
@@ -121,9 +118,10 @@ where
     EDT: fmt::Debug,
 {
     type Offset = u32;
-    type Scale = Option<f32>;
+    type Scale = f32;
 
     fn read(&mut self) -> i32 {
+        // TODO: change this to return an option or error if the device is not ready.
         if !self.is_ready() {
             return HX711_MINIMUM;
         }
@@ -156,9 +154,9 @@ where
         } else if signed > HX711_MAXIMUM {
             signed = HX711_MAXIMUM;
         }
-        self.last_reading = signed;
+        self.last_reading = signed - self.offset;
 
-        signed
+        self.last_reading
     }
 
     fn get_offset(&self) -> Self::Offset {
@@ -169,9 +167,9 @@ where
         self.scale as Self::Scale
     }
 
-    fn read_scaled(&mut self) -> Option<f32> {
+    fn read_scaled(&mut self) -> Self::Scale {
         let raw = self.read();
-        self.scale.map(|x| raw as f32 * x)
+        raw as f32 * self.scale
     }
 
     fn set_scale(&mut self, scale: Self::Scale) {
@@ -183,10 +181,10 @@ where
         let mut average: f32 = 0.0;
         for n in 1..=num_samples {
             while !self.is_ready() {
-                self.delay.delay_us(5000u32);
+                self.delay.delay_us(HX711_TARE_DELAY_TIME_US);
             }
             current = self.read() as f32;
-            self.delay.delay_us(10u32 * 1000);
+            self.delay.delay_us(HX711_TARE_SLEEP_TIME_US);
             average += (current - average) / (n as f32);
         }
 

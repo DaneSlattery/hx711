@@ -1,35 +1,40 @@
+//! HX 711 Polling Example
+//!
+
 #![no_std]
 #![no_main]
 
+use esp32_hal::{clock::ClockControl, entry, peripherals::Peripherals, prelude::*, Delay, IO};
 use esp_backtrace as _;
-use hal::{
-    clock::ClockControl,
-    entry,
-    peripherals::{self, Peripherals},
-    prelude::*,
-    Delay, IO,
-};
 use loadcell::{hx711, LoadCell};
 
 #[entry]
 fn main() -> ! {
     let periph = Peripherals::take();
-
     let system = periph.DPORT.split();
 
     let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
 
     let io = IO::new(periph.GPIO, periph.IO_MUX);
 
-    let hx711_sck = io.pins.gpio4.into_push_pull_output();
-    let hx711_dt = io.pins.gpio16.into_floating_input();
+    // setup the pins
+    let hx711_sck = io.pins.gpio5.into_push_pull_output();
+    let hx711_dt = io.pins.gpio4.into_floating_input();
 
     let mut delay = Delay::new(&clocks);
-    let mut load_sensor = hx711::HX711::new(hx711_sck, hx711_dt, delay);
 
+    // create the load sensor
+    let mut load_sensor = hx711::HX711::new(hx711_sck, hx711_dt, delay);
+    // zero the readings
     load_sensor.tare(16);
+
+    load_sensor.set_scale(1.0);
+
     loop {
-        let reading = load_sensor.read_scaled();
-        delay.delay_ms(5);
+        if load_sensor.is_ready() {
+            let reading = load_sensor.read_scaled();
+            esp_println::println!("Last Reading = {:?}", reading);
+        }
+        delay.delay_ms(5u32);
     }
 }

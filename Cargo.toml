@@ -18,6 +18,10 @@ esp32_interrupt = ["esp32-hal"]
 name = "interrupt"
 required-features = ["esp32_interrupt"]
 
+[[example]]
+name = "polling"
+required-features = ["esp32_interrupt"]
+
 [dev-dependencies]
 esp-backtrace = { version = "0.8.0", features = [
     "esp32",
