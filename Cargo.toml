@@ -8,8 +8,8 @@ homepage = "http://github.com/DaneSlattery/hx711"
 description = "A no-std embedded-hal package for the hx711 load cell, based on the embedded hal. Has optional support for interrupts on the esp32."
 
 [dependencies]
-embedded-hal = { version = "*", features = ["unproven"] }
-esp32-hal = { version = "*", optional = true }
+embedded-hal = { version = "0.2.7", features = ["unproven"] }
+esp32-hal = { version = "0.15.0", optional = true }
 
 [features]
 default = []
@@ -33,4 +33,4 @@ esp-backtrace = { version = "0.8.0", features = [
 ] }
 esp-println = { version = "0.6.0", features = ["esp32", "log"] }
 log = { version = "0.4.18" }
-critical-section = "*"
+critical-section = "1.1.2"
