@@ -2,10 +2,13 @@
 
 pub mod hx711;
 
-// pub mod hx711_interrupt;
+/// The generic load cell interface.
 pub trait LoadCell {
+    /// The offset used to zero the load cell.
     type Offset;
+    /// The multiplier used for the scale sensitivity.
     type Scale;
+
     /// Read the value from the load cell
     fn read(&mut self) -> i32;
 
@@ -23,21 +26,6 @@ pub trait LoadCell {
     /// Use this to ensure that 1kg ~ 1kg
     fn set_scale(&mut self, scale: Self::Scale);
 
-    /// Get the scale.
+    /// Get the  scale.
     fn get_scale(&self) -> Self::Scale;
-}
-
-// pub fn add(left: usize, right: usize) -> usize {
-//     left + right
-// }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // #[test]
-    // fn it_works() {
-    //     let result = add(2, 2);
-    //     assert_eq!(result, 4);
-    // }
 }
