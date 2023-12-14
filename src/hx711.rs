@@ -1,8 +1,3 @@
-/// The hx711 is a load cell amplifier
-/// This implements the hx711 using `embedded-hal` traits
-///
-///
-// use core::convert::Infallible;
 #[cfg(feature = "default")]
 use core::fmt;
 
@@ -19,7 +14,7 @@ use embedded_hal::digital::v2::{InputPin, OutputPin};
 
 #[cfg(feature = "default")]
 use crate::LoadCell;
-// pub mod hx711_interrupt;
+
 #[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum GainMode {
