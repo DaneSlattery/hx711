@@ -1,6 +1,7 @@
 #[cfg(feature = "default")]
 use core::fmt;
 
+use core::fmt::Display;
 use core::mem::transmute;
 
 #[cfg(feature = "esp32_interrupt")]
@@ -45,6 +46,15 @@ where
     scale: f32,  // calibration value,
 }
 
+#[derive(Debug)]
+pub struct NotReadyError;
+
+impl Display for NotReadyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Device not ready to read")
+    }
+}
+
 #[cfg(feature = "default")]
 impl<SckPin, DTPin, Delay, ESCK, EDT> HX711<SckPin, DTPin, Delay>
 where
@@ -54,6 +64,7 @@ where
     EDT: fmt::Debug,
     ESCK: fmt::Debug,
 {
+    /// Constructs a new hx711 driver, taking ownership of the pins.
     pub fn new(mut sck_pin: SckPin, dt_pin: DTPin, delay: Delay) -> Self {
         sck_pin.set_low().unwrap();
         Self {
@@ -66,6 +77,8 @@ where
             scale: 1.0,
         }
     }
+
+    /// Returns true if the load cell amplifier has a value ready to be read.
     pub fn is_ready(&self) -> bool {
         self.dt_pin.is_low().unwrap()
     }
@@ -94,34 +107,17 @@ where
         self.delay.delay_us(hx711_delay_time_us);
     }
 
+    /// Set the gain mode for the next reading.
     pub fn set_gain_mode(&mut self, gain_mode: GainMode) {
         self.gain_mode = gain_mode;
     }
 
+    /// Get the gain mode.
     pub fn get_gain_mode(&self) -> GainMode {
         self.gain_mode
     }
-}
 
-#[cfg(feature = "default")]
-impl<SckPin, DTPin, Delay, ESCK, EDT> LoadCell for HX711<SckPin, DTPin, Delay>
-where
-    SckPin: OutputPin<Error = ESCK>,
-    DTPin: InputPin<Error = EDT>,
-    Delay: DelayUs<u32>,
-    ESCK: fmt::Debug,
-    EDT: fmt::Debug,
-{
-    type Offset = u32;
-    type Scale = f32;
-
-    fn read(&mut self) -> i32 {
-        // TODO: change this to return an option or error if the device is not ready.
-        if !self.is_ready() {
-            return HX711_MINIMUM;
-        }
-
-        //data ready
+    fn read_bits(&mut self) -> i32 {
         let mut current_bit: u32;
         let mut value: u32 = 0;
         // read in data bits
@@ -149,9 +145,35 @@ where
         } else if signed > HX711_MAXIMUM {
             signed = HX711_MAXIMUM;
         }
+
+        signed
+    }
+}
+
+#[cfg(feature = "default")]
+impl<SckPin, DTPin, Delay, ESCK, EDT> LoadCell for HX711<SckPin, DTPin, Delay>
+where
+    SckPin: OutputPin<Error = ESCK>,
+    DTPin: InputPin<Error = EDT>,
+    Delay: DelayUs<u32>,
+    ESCK: fmt::Debug,
+    EDT: fmt::Debug,
+{
+    type Offset = i32;
+    type Scale = f32;
+
+    type NotReadyError = NotReadyError;
+
+    fn read(&mut self) -> Result<i32, Self::NotReadyError> {
+        // TODO: change this to return an option or error if the device is not ready.
+        if !self.is_ready() {
+            return Err(NotReadyError);
+        }
+        let signed = self.read_bits();
+
         self.last_reading = signed - self.offset;
 
-        self.last_reading
+        Ok(self.last_reading)
     }
 
     fn get_offset(&self) -> Self::Offset {
@@ -162,9 +184,9 @@ where
         self.scale as Self::Scale
     }
 
-    fn read_scaled(&mut self) -> Self::Scale {
-        let raw = self.read();
-        raw as f32 * self.scale
+    fn read_scaled(&mut self) -> Result<Self::Scale, NotReadyError> {
+        let raw = self.read()?;
+        Ok(raw as f32 * self.scale)
     }
 
     fn set_scale(&mut self, scale: Self::Scale) {
@@ -178,11 +200,11 @@ where
             while !self.is_ready() {
                 self.delay.delay_us(HX711_TARE_DELAY_TIME_US);
             }
-            current = self.read() as f32;
+            current = self.read_bits() as f32;
             self.delay.delay_us(HX711_TARE_SLEEP_TIME_US);
             average += (current - average) / (n as f32);
         }
 
-        self.offset = average as i32;
+        self.offset = average as Self::Offset;
     }
 }

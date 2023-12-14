@@ -3,4 +3,7 @@
     "rust-analyzer.linkedProjects": [
         "Cargo.toml"
     ],
+    "rust-analyzer.cargo.features": [
+        "esp32_interrupt"
+    ]
 }
