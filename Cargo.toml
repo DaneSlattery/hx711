@@ -1,11 +1,12 @@
 [package]
 name = "loadcell"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["DaneSlattery <dane_s@umantec.net>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 homepage = "http://github.com/DaneSlattery/hx711"
 description = "A no-std embedded-hal package for the hx711 load cell, based on the embedded hal. Has optional support for interrupts on the esp32."
+readme = "README.md"
 
 [dependencies]
 critical-section = "1.1.2"
