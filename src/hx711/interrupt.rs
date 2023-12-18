@@ -1,6 +1,5 @@
-// #[doc = r"
-// ESP32 Specific implementation for use with interrupts
-// "]
+//! ESP32 Specific implementation for use with interrupts
+
 use crate::hx711::HX711;
 use crate::LoadCell;
 
