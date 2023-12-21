@@ -50,9 +50,8 @@ fn main() -> ! {
 
     let hx711_dt = io.pins.gpio4.into_floating_input();
     let mut load_sensor = HX711::new(hx711_sck, hx711_dt, delay);
-    // load_sensor.disable_interrupt(); // make sure interrupts are disabled when reading manually.
 
-    load_sensor.tare_sync(20); // load_sensor.tare();
+    load_sensor.tare_sync(20);
     println!("Tare = {}", load_sensor.get_offset());
     critical_section::with(|cs| {
         HX711_MUTEX.borrow_ref_mut(cs).replace(load_sensor);
@@ -69,10 +68,7 @@ fn main() -> ! {
 
     loop {
         critical_section::with(|cs| {
-            println!(
-                "Last Reading = {}",
-                HX711_READING_MUTEX.borrow(cs).get() // HX711_MUTEX.borrow_ref_mut(cs).as_mut().unwrap().get_last()
-            );
+            println!("Last Reading = {}", HX711_READING_MUTEX.borrow(cs).get());
         });
 
         delay.delay_ms(50u32);
@@ -86,7 +82,7 @@ fn GPIO() {
         let mut bind = HX711_MUTEX.borrow_ref_mut(cs);
         let hx711 = bind.borrow_mut().as_mut().unwrap();
         if hx711.is_ready() {
-            HX711_READING_MUTEX.borrow(cs).set(hx711.read());
+            HX711_READING_MUTEX.borrow(cs).set(hx711.read().unwrap());
         }
         hx711.clear_interrupt();
     });

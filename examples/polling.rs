@@ -33,7 +33,10 @@ fn main() -> ! {
     loop {
         if load_sensor.is_ready() {
             let reading = load_sensor.read_scaled();
-            esp_println::println!("Last Reading = {:?}", reading);
+            match reading {
+                Ok(x) => esp_println::println!("Last Reading = {:?}", x),
+                Err(_) => (),
+            }
         }
         delay.delay_ms(5u32);
     }
