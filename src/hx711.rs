@@ -101,10 +101,12 @@ where
     }
 
     fn toggle_sck_bit(&mut self, hx711_delay_time_us: u32) {
-        self.sck_pin.set_high().unwrap();
-        self.delay.delay_us(hx711_delay_time_us);
-        self.sck_pin.set_low().unwrap();
-        self.delay.delay_us(hx711_delay_time_us);
+        critical_section::with(|_| {
+            self.sck_pin.set_high().unwrap();
+            self.delay.delay_us(hx711_delay_time_us);
+            self.sck_pin.set_low().unwrap();
+            self.delay.delay_us(hx711_delay_time_us);
+        });
     }
 
     /// Set the gain mode for the next reading.
@@ -117,15 +119,24 @@ where
         self.gain_mode
     }
 
+    /// The reading must run in a critical section to prevent other interrupts from altering the SCK timing.
+    /// If an interrupt occurs during the time the SCK signal is high, it will stretch the length of the clock pulse.
+    /// If the total pulse time exceeds 60 us, this will cause the HX711 to enter power down mode during the middle of
+    /// the read sequence. While the device will wake up when PD_SCK goes low again, the reset starts a new conversion
+    /// cycle which forces DT high until that cycle is completed. The result is that all subsequent bits read by
+    /// this function will read back as 1, corrupting the returned value.
     fn read_bits(&mut self) -> i32 {
-        let mut current_bit: u32;
-        let mut value: u32 = 0;
         // read in data bits
-        for _ in 0..24 {
-            current_bit = self.read_hx711_bit(HX711_DELAY_TIME_US) as u32;
-            // bits arrive MSB first
-            value = (value << 1) | current_bit;
-        }
+        let mut value = critical_section::with(|_| {
+            let mut value: u32 = 0;
+            let mut current_bit: u32;
+            for _ in 0..24 {
+                current_bit = self.read_hx711_bit(HX711_DELAY_TIME_US) as u32;
+                // bits arrive MSB first
+                value = (value << 1) | current_bit;
+            }
+            value
+        });
         // send gain mode for next reading
         let current_gain_mode = self.gain_mode as u8;
         for _ in 0..current_gain_mode {
