@@ -1,6 +1,5 @@
-// #[doc = r"
-// ESP32 Specific implementation for use with interrupts
-// "]
+//! ESP32 Specific implementation for use with interrupts
+
 use crate::hx711::HX711;
 use crate::LoadCell;
 
@@ -8,6 +7,9 @@ use core::convert::Infallible;
 
 use esp32_hal::gpio::{Event, InputPin, OutputPin};
 
+/// An extension of the `LoadCell` interface that can be used instead
+/// of polling, rather listening on the DT pin for
+/// pin change events.
 #[cfg(feature = "esp32_interrupt")]
 pub trait Interrupt: LoadCell {
     /// Tare the loadcell synchronously only, disabling interrupts,
@@ -15,10 +17,13 @@ pub trait Interrupt: LoadCell {
     /// the blocking tare.
     fn tare_sync(&mut self, num_samples: usize);
 
+    /// Disable the pin change interrupt on the DT pin.
     fn disable_interrupt(&mut self);
 
+    /// Listen for pin change events on the DT pin.
     fn enable_interrupt(&mut self);
 
+    /// Clear the status interrupt bit for the DT pin.
     fn clear_interrupt(&mut self);
 }
 

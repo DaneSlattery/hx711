@@ -1,10 +1,11 @@
+//! HX711 Load Cell Amplifier
 #[cfg(feature = "default")]
 use core::fmt;
 
 use core::fmt::Display;
 use core::mem::transmute;
 
-#[cfg(feature = "esp32_interrupt")]
+#[cfg(any(feature = "esp32_interrupt", doc))]
 pub mod interrupt;
 #[cfg(feature = "esp32_interrupt")]
 pub use interrupt::*;
@@ -16,21 +17,31 @@ use embedded_hal::digital::v2::{InputPin, OutputPin};
 #[cfg(feature = "default")]
 use crate::LoadCell;
 
+/// The HX711 has different amplifier gain settings.
+/// The choice of gain settings is controlled by writing a fixed number of
+/// extra pulses after a read.
 #[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum GainMode {
+    /// Amplification gain of 128 on channel A.
     A128 = 1, // extra pulses
+    /// Amplification gain of 32 on channel B.
     B32 = 2,
+    /// Amplification gain of 64 on channel A.
     A64 = 3,
 }
 
+/// The absolute minimum readings. A smaller value should be clamped.
 pub const HX711_MINIMUM: i32 = -(2i32.saturating_pow(24 - 1));
+/// The absolute maximum readings. A greater value should be clamped.
 pub const HX711_MAXIMUM: i32 = 2i32.saturating_pow(24 - 1) - 1;
+
 const HX711_DELAY_TIME_US: u32 = 1;
 
 const HX711_TARE_DELAY_TIME_US: u32 = 5000;
 const HX711_TARE_SLEEP_TIME_US: u32 = 10000;
 
+/// Device driver for the HX711 load cell amplifier.
 pub struct HX711<SckPin, DTPin, Delay>
 where
     SckPin: OutputPin,
