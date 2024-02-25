@@ -11,8 +11,9 @@ pub trait LoadCell {
     /// The multiplier used for the scale sensitivity.
     type Scale;
 
-    // Returned when trying to read from the hx711 chip when it is not ready.
+    /// Returned when trying to read from the hx711 chip when it is not ready.
     type NotReadyError;
+
     /// Read the value from the load cell
     fn read(&mut self) -> Result<i32, Self::NotReadyError>;
 

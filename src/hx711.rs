@@ -58,6 +58,7 @@ where
 }
 
 #[derive(Debug)]
+/// Error returned when reading from the device before it has a new reading available.
 pub struct NotReadyError;
 
 impl Display for NotReadyError {

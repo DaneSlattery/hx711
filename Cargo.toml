@@ -7,6 +7,8 @@ license = "MIT OR Apache-2.0"
 homepage = "http://github.com/DaneSlattery/hx711"
 description = "A no-std embedded-hal package for the hx711 load cell, based on the embedded hal. Has optional support for interrupts on the esp32."
 readme = "README.md"
+keywords = ["scale", "hx711", "loadcell", "no-std", "driver"]
+categories = ["no-std", "embedded", "hardware-support", "science::robotics"]
 
 [dependencies]
 critical-section = "1.1.2"
