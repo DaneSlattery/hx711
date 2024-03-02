@@ -11,7 +11,7 @@ use loadcell::{hx711, LoadCell};
 #[entry]
 fn main() -> ! {
     let periph = Peripherals::take();
-    let system = periph.DPORT.split();
+    let system = periph.SYSTEM.split();
 
     let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
 

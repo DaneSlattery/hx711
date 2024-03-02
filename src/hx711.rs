@@ -10,9 +10,8 @@ pub mod interrupt;
 #[cfg(feature = "esp32_interrupt")]
 pub use interrupt::*;
 
-use embedded_hal::blocking::delay::DelayUs;
-
-use embedded_hal::digital::v2::{InputPin, OutputPin};
+use embedded_hal::delay::DelayNs;
+use embedded_hal::digital::{InputPin, OutputPin};
 
 #[cfg(feature = "default")]
 use crate::LoadCell;
@@ -46,7 +45,7 @@ pub struct HX711<SckPin, DTPin, Delay>
 where
     SckPin: OutputPin,
     DTPin: InputPin,
-    Delay: DelayUs<u32>,
+    Delay: DelayNs,
 {
     sck_pin: SckPin,
     dt_pin: DTPin,
@@ -72,7 +71,7 @@ impl<SckPin, DTPin, Delay, ESCK, EDT> HX711<SckPin, DTPin, Delay>
 where
     SckPin: OutputPin<Error = ESCK>,
     DTPin: InputPin<Error = EDT>,
-    Delay: DelayUs<u32>,
+    Delay: DelayNs,
     EDT: fmt::Debug,
     ESCK: fmt::Debug,
 {
@@ -91,7 +90,7 @@ where
     }
 
     /// Returns true if the load cell amplifier has a value ready to be read.
-    pub fn is_ready(&self) -> bool {
+    pub fn is_ready(&mut self) -> bool {
         self.dt_pin.is_low().unwrap()
     }
 
@@ -178,7 +177,7 @@ impl<SckPin, DTPin, Delay, ESCK, EDT> LoadCell for HX711<SckPin, DTPin, Delay>
 where
     SckPin: OutputPin<Error = ESCK>,
     DTPin: InputPin<Error = EDT>,
-    Delay: DelayUs<u32>,
+    Delay: DelayNs,
     ESCK: fmt::Debug,
     EDT: fmt::Debug,
 {
