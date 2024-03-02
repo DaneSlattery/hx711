@@ -11,30 +11,26 @@ keywords = ["scale", "hx711", "loadcell", "no-std", "driver"]
 categories = ["no-std", "embedded", "hardware-support", "science::robotics"]
 
 [dependencies]
+esp32-hal = { version = "0.18.0", optional = true, features = ["eh1"] }
 critical-section = "1.1.2"
-embedded-hal = { version = "0.2.7", features = ["unproven"] }
-esp32-hal = { version = "0.17.0", optional = true }
+embedded-hal = { version = "1.0.0" }
 
 [features]
 default = []
 esp32_interrupt = ["esp32-hal"]
 
-
 [[example]]
 name = "interrupt"
 required-features = ["esp32_interrupt"]
 
-[[example]]
-name = "polling"
-required-features = ["esp32_interrupt"]
 
 [dev-dependencies]
-esp-backtrace = { version = "0.8.0", features = [
+esp-backtrace = { version = "0.11.0", features = [
     "esp32",
     "panic-handler",
     "exception-handler",
-    "print-uart",
+    "println",
 ] }
-esp-println = { version = "0.6.0", features = ["esp32", "log"] }
+esp-println = { version = "0.9.0", features = ["esp32", "log"] }
 log = { version = "0.4.18" }
 critical-section = "1.1.2"
