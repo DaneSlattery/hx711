@@ -212,7 +212,7 @@ where
         Ok(raw as f32 * self.scale)
     }
 
-    fn set_offset(&mut self, offset: i32) {
+    fn set_offset(&mut self, offset: Self::Offset) {
         self.offset = offset;
     }
 
