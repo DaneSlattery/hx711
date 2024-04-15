@@ -30,9 +30,9 @@ pub trait Interrupt: LoadCell {
 #[cfg(feature = "esp32_interrupt")]
 impl<SckPin, DTPin, Delay> Interrupt for HX711<SckPin, DTPin, Delay>
 where
-    SckPin: OutputPin + embedded_hal::digital::v2::OutputPin<Error = Infallible>,
-    DTPin: InputPin + embedded_hal::digital::v2::InputPin<Error = Infallible>,
-    Delay: embedded_hal::blocking::delay::DelayUs<u32>,
+    SckPin: OutputPin + embedded_hal::digital::OutputPin<Error = Infallible>,
+    DTPin: InputPin + embedded_hal::digital::InputPin<Error = Infallible>,
+    Delay: embedded_hal::delay::DelayNs,
 {
     fn tare_sync(&mut self, num_samples: usize) {
         let mut was_listening = false;
