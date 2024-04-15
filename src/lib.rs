@@ -24,6 +24,9 @@ pub trait LoadCell {
     /// Zero the load cell offset by averaging `num_samples` readings
     fn tare(&mut self, num_samples: usize);
 
+    /// Set the load cell offset.
+    fn set_offset(&mut self, offset: Self::Offset);
+
     /// Get the load cell offset.
     fn get_offset(&self) -> Self::Offset;
 
