@@ -4,9 +4,10 @@
 #![no_std]
 #![no_main]
 
-use esp32_hal::{clock::ClockControl, entry, peripherals::Peripherals, prelude::*, Delay, IO};
+use esp_hal::{clock::ClockControl, entry, peripherals::Peripherals, prelude::*, delay::Delay, gpio::IO};
 use esp_backtrace as _;
 use loadcell::{hx711, LoadCell};
+use embedded_hal::delay::DelayNs;
 
 #[entry]
 fn main() -> ! {
