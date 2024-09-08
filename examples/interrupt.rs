@@ -23,8 +23,7 @@ use esp_hal::{
     clock::ClockControl,
     delay::Delay,
     gpio::{Gpio4, Gpio5, Input, Io, Output},
-    interrupt,
-    peripherals::{self, Peripherals},
+    peripherals::Peripherals,
     prelude::*,
 };
 
@@ -33,12 +32,11 @@ use loadcell::LoadCell;
 
 type SckPin<'a> = Output<'a, Gpio5>; // Gpio5<Output<PushPull>>;
 type DTPin<'a> = Input<'a, Gpio4>; //Gpio4<Input<Floating>>;
-
+type EspHX711<'a> = HX711<SckPin<'a>, &'a DTPinWrapper<'a>, Delay>;
 // mutex to access during interrupt and in main
 static HX711_READING_MUTEX: Mutex<Cell<i32>> = Mutex::new(Cell::new(0));
 // mutex to access during interrupt and in main
-static HX711_MUTEX: Mutex<RefCell<Option<HX711<SckPin, &DTPinWrapper, Delay>>>> =
-    Mutex::new(RefCell::new(None));
+static HX711_MUTEX: Mutex<RefCell<Option<EspHX711>>> = Mutex::new(RefCell::new(None));
 
 struct DTPinWrapper<'a> {
     inner: Mutex<RefCell<Option<DTPin<'a>>>>,
