@@ -4,22 +4,30 @@
 #![no_std]
 #![no_main]
 
-use esp32_hal::{clock::ClockControl, entry, peripherals::Peripherals, prelude::*, Delay, IO};
+use embedded_hal::delay::DelayNs;
 use esp_backtrace as _;
+use esp_hal::{
+    clock::ClockControl,
+    delay::Delay,
+    gpio::{Input, Io, Level, Output, Pull},
+    peripherals::Peripherals,
+    prelude::*,
+    system::SystemControl,
+};
 use loadcell::{hx711, LoadCell};
 
 #[entry]
 fn main() -> ! {
     let periph = Peripherals::take();
-    let system = periph.DPORT.split();
+    let system = SystemControl::new(periph.SYSTEM);
 
     let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
 
-    let io = IO::new(periph.GPIO, periph.IO_MUX);
+    let io = Io::new(periph.GPIO, periph.IO_MUX);
 
     // setup the pins
-    let hx711_sck = io.pins.gpio5.into_push_pull_output();
-    let hx711_dt = io.pins.gpio4.into_floating_input();
+    let hx711_sck = Output::new(io.pins.gpio5, Level::Low);
+    let hx711_dt = Input::new(io.pins.gpio4, Pull::None);
 
     let mut delay = Delay::new(&clocks);
 
@@ -33,11 +41,11 @@ fn main() -> ! {
     loop {
         if load_sensor.is_ready() {
             let reading = load_sensor.read_scaled();
-            match reading {
-                Ok(x) => esp_println::println!("Last Reading = {:?}", x),
-                Err(_) => (),
+            if let Ok(x) = reading {
+                esp_println::println!("Last Reading = {:?}", x)
             }
         }
         delay.delay_ms(5u32);
+        // delay.delay_ms(5u32);
     }
 }

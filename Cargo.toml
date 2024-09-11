@@ -1,6 +1,6 @@
 [package]
 name = "loadcell"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["DaneSlattery <dane_s@umantec.net>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -12,29 +12,22 @@ categories = ["no-std", "embedded", "hardware-support", "science::robotics"]
 
 [dependencies]
 critical-section = "1.1.2"
-embedded-hal = { version = "0.2.7", features = ["unproven"] }
-esp32-hal = { version = "0.17.0", optional = true }
-
-[features]
-default = []
-esp32_interrupt = ["esp32-hal"]
-
+embedded-hal = { version = "1.0.0" }
+esp-hal = { version = "0.20.1", optional = true }
 
 [[example]]
 name = "interrupt"
-required-features = ["esp32_interrupt"]
 
 [[example]]
 name = "polling"
-required-features = ["esp32_interrupt"]
 
 [dev-dependencies]
-esp-backtrace = { version = "0.8.0", features = [
+esp-backtrace = { version = "0.14.1", features = [
     "esp32",
     "panic-handler",
     "exception-handler",
-    "print-uart",
+    "println",
 ] }
-esp-println = { version = "0.6.0", features = ["esp32", "log"] }
+esp-println = { version = "0.11.0", features = ["esp32", "log"] }
 log = { version = "0.4.18" }
-critical-section = "1.1.2"
+esp-hal = { version = "0.20.1", features = ["esp32"] }
