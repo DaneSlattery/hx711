@@ -35,12 +35,7 @@ const HX711_TARE_DELAY_TIME_US: u32 = 5000;
 const HX711_TARE_SLEEP_TIME_US: u32 = 10000;
 
 /// Device driver for the HX711 load cell amplifier.
-pub struct HX711<SckPin, DTPin, Delay>
-// where
-//     SckPin: OutputPin,
-//     DTPin: BorrowMutInputPin,
-//     Delay: DelayNs,
-{
+pub struct HX711<SckPin, DTPin, Delay> {
     sck_pin: SckPin,
     dt_pin: DTPin,
     delay: Delay,
