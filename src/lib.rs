@@ -14,11 +14,13 @@ pub trait LoadCell {
     /// Returned when trying to read from the hx711 chip when it is not ready.
     type NotReadyError;
 
-    /// Read the value from the load cell
+    /// Read the value from the load cell after applying the offset.
     fn read(&mut self) -> Result<i32, Self::NotReadyError>;
 
     /// Read the value after applying scaling.
-    /// Casts to the type of Scale.
+    ///
+    /// This is similar to `read`, except the scaling is applied after the offset
+    /// Casts to the type of `Scale`.
     fn read_scaled(&mut self) -> Result<Self::Scale, Self::NotReadyError>;
 
     /// Zero the load cell offset by averaging `num_samples` readings

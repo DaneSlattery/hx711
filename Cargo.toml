@@ -13,7 +13,7 @@ categories = ["no-std", "embedded", "hardware-support", "science::robotics"]
 [dependencies]
 critical-section = "1.1.2"
 embedded-hal = { version = "1.0.0" }
-esp-hal = { version = "0.20.1", optional = true }
+esp-hal = { version = "0.23.1", optional = true }
 
 [[example]]
 name = "interrupt"
@@ -22,12 +22,12 @@ name = "interrupt"
 name = "polling"
 
 [dev-dependencies]
-esp-backtrace = { version = "0.14.1", features = [
+esp-backtrace = { version = "0.15.0", features = [
     "esp32",
     "panic-handler",
     "exception-handler",
     "println",
 ] }
-esp-println = { version = "0.11.0", features = ["esp32", "log"] }
+esp-println = { version = "0.13.0", features = ["esp32", "log"] }
 log = { version = "0.4.18" }
-esp-hal = { version = "0.20.1", features = ["esp32"] }
+esp-hal = { version = "0.23.1", features = ["esp32"] }
