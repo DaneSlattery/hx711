@@ -16,7 +16,7 @@ For more information about the hardware and hookup, see this comprehensive guide
 This crate is on [crates.io](https://crates.io/crates/loadcell), which means it can be installed by including this line in your `cargo.toml`:
 
 ```
-loadcell = "0.1.0"
+loadcell = "0.3.0"
 ```
 
 ## Usage

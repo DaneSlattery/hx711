@@ -150,11 +150,7 @@ where
         }
         let mut signed = unsafe { transmute::<u32, i32>(value) };
         // saturation
-        if signed < HX711_MINIMUM {
-            signed = HX711_MINIMUM;
-        } else if signed > HX711_MAXIMUM {
-            signed = HX711_MAXIMUM;
-        }
+        signed = signed.clamp(HX711_MINIMUM, HX711_MAXIMUM);
 
         signed
     }

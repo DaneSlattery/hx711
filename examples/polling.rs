@@ -7,29 +7,23 @@
 use embedded_hal::delay::DelayNs;
 use esp_backtrace as _;
 use esp_hal::{
-    clock::ClockControl,
+    clock::CpuClock,
     delay::Delay,
-    gpio::{Input, Io, Level, Output, Pull},
-    peripherals::Peripherals,
-    prelude::*,
-    system::SystemControl,
+    gpio::{Input, Level, Output, Pull},
+    init, main,
 };
+
 use loadcell::{hx711, LoadCell};
 
-#[entry]
+#[main]
 fn main() -> ! {
-    let periph = Peripherals::take();
-    let system = SystemControl::new(periph.SYSTEM);
-
-    let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
-
-    let io = Io::new(periph.GPIO, periph.IO_MUX);
+    let periph = init(esp_hal::Config::default().with_cpu_clock(CpuClock::max()));
 
     // setup the pins
-    let hx711_sck = Output::new(io.pins.gpio5, Level::Low);
-    let hx711_dt = Input::new(io.pins.gpio4, Pull::None);
+    let hx711_sck = Output::new(periph.GPIO5, Level::Low);
+    let hx711_dt = Input::new(periph.GPIO4, Pull::None);
 
-    let mut delay = Delay::new(&clocks);
+    let mut delay = Delay::new();
 
     // create the load sensor
     let mut load_sensor = hx711::HX711::new(hx711_sck, hx711_dt, delay);
@@ -46,6 +40,5 @@ fn main() -> ! {
             }
         }
         delay.delay_ms(5u32);
-        // delay.delay_ms(5u32);
     }
 }

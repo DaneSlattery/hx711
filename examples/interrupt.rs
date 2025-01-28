@@ -15,24 +15,26 @@ use critical_section::Mutex;
 
 use embedded_hal::digital::{ErrorType, InputPin};
 use esp_backtrace as _;
+use esp_hal::clock::CpuClock;
 use esp_hal::gpio::{Event, Level, Pull};
-use esp_hal::system::SystemControl;
+use esp_hal::interrupt::InterruptConfigurable;
+use esp_hal::{handler, ram};
 use esp_println::println;
 
 use esp_hal::{
-    clock::ClockControl,
     delay::Delay,
-    gpio::{Gpio4, Gpio5, Input, Io, Output},
-    peripherals::Peripherals,
-    prelude::*,
+    gpio::{Input, Io, Output},
+    main,
 };
 
 use loadcell::hx711::HX711;
 use loadcell::LoadCell;
 
-type SckPin<'a> = Output<'a, Gpio5>; // Gpio5<Output<PushPull>>;
-type DTPin<'a> = Input<'a, Gpio4>; //Gpio4<Input<Floating>>;
+type SckPin<'a> = Output<'a>;
+type DTPin<'a> = Input<'a>;
+
 type EspHX711<'a> = HX711<SckPin<'a>, &'a DTPinWrapper<'a>, Delay>;
+
 // mutex to access during interrupt and in main
 static HX711_READING_MUTEX: Mutex<Cell<i32>> = Mutex::new(Cell::new(0));
 // mutex to access during interrupt and in main
@@ -71,20 +73,19 @@ static HX711_DT_MUTEX: DTPinWrapper = DTPinWrapper {
     inner: Mutex::new(RefCell::new(None)),
 };
 
-#[entry]
+#[main]
 fn main() -> ! {
-    let periph = Peripherals::take();
-    let system = SystemControl::new(periph.SYSTEM);
+    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
 
-    let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
-    let delay = Delay::new(&clocks);
+    let peripherals = esp_hal::init(config);
 
-    let mut io = Io::new(periph.GPIO, periph.IO_MUX);
+    let mut io = Io::new(peripherals.IO_MUX);
     io.set_interrupt_handler(handler);
 
     // setup the pins
-    let hx711_sck = Output::new(io.pins.gpio5, Level::Low);
-    let hx711_dt = Input::new(io.pins.gpio4, Pull::None);
+    let hx711_sck = Output::new(peripherals.GPIO5, Level::Low);
+    let hx711_dt = Input::new(peripherals.GPIO4, Pull::None);
+    let delay = Delay::new();
 
     critical_section::with(|cs| {
         HX711_DT_MUTEX.inner.borrow_ref_mut(cs).replace(hx711_dt);
